@@ -2,3 +2,7 @@ streamlit
 pandas
 numpy
 reportlab
+matplotlib
+folium
+streamlit-autorefresh
+pillow
