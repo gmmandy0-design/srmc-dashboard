@@ -4,18 +4,13 @@ import pandas as pd
 import numpy as np
 import datetime
 import io
+import os
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from reportlab.pdfgen import canvas
 import folium
 from folium.plugins import HeatMap
-import os
-
-# ----------------------------------
-# ✅ AUTO REFRESH
-# ----------------------------------
-# Using Streamlit's built-in rerun with time-based polling
-if "refresh_count" not in st.session_state:
-    st.session_state.refresh_count = 0
 
 # ----------------------------------
 # ✅ PAGE CONFIG
@@ -156,21 +151,28 @@ st.dataframe(df, use_container_width=True)
 # ----------------------------------
 st.subheader("📈 Patient Growth")
 
-fig, ax = plt.subplots(figsize=(6,3))
-monthly.plot(ax=ax, marker='o')
+fig1 = plt.figure(figsize=(8, 4))
+monthly.plot(marker='o', color='#1f3c88')
+plt.title("Patient Growth Over Time")
 plt.xticks(rotation=45)
-st.pyplot(fig, use_container_width=True)
+plt.tight_layout()
+st.pyplot(fig1, use_container_width=True)
+plt.close(fig1)
 
 # ----------------------------------
 # ✅ KPI TRACKING
 # ----------------------------------
 st.subheader("🎯 KPI Performance")
 
-fig2, ax2 = plt.subplots(figsize=(6,3))
-ax2.plot(monthly, label="Actual")
-ax2.plot(monthly*1.1, label="Target")
-ax2.legend()
+fig2 = plt.figure(figsize=(8, 4))
+plt.plot(monthly.index, monthly.values, marker='o', label="Actual", color='#1f3c88')
+plt.plot(monthly.index, monthly.values*1.1, marker='s', label="Target", color='#3cb371')
+plt.legend()
+plt.title("Actual vs Target")
+plt.xticks(rotation=45)
+plt.tight_layout()
 st.pyplot(fig2, use_container_width=True)
+plt.close(fig2)
 
 # ----------------------------------
 # ✅ GEO MAP
@@ -230,20 +232,30 @@ competitors = pd.DataFrame({
 
 # Market share
 total = competitors["Patients"].sum()
-competitors["Share"] = competitors["Patients"] / total * 100
+competitors["Share"] = (competitors["Patients"] / total * 100).round(1)
 
-fig3, ax3 = plt.subplots(figsize=(5,4))
-ax3.pie(competitors["Share"], labels=competitors["Clinic"], autopct='%1.1f%%')
+# Pie chart
+fig3 = plt.figure(figsize=(6, 5))
+colors = ['#1f3c88', '#3cb371', '#ff9999', '#ffcc99']
+plt.pie(competitors["Share"], labels=competitors["Clinic"], autopct='%1.1f%%', colors=colors)
+plt.title("Market Share")
 st.pyplot(fig3, use_container_width=True)
+plt.close(fig3)
 
-fig4, ax4 = plt.subplots(figsize=(6,3))
-ax4.bar(competitors["Clinic"], competitors["Patients"])
+# Bar chart
+fig4 = plt.figure(figsize=(8, 4))
+plt.bar(competitors["Clinic"], competitors["Patients"], color='#1f3c88')
+plt.title("Patient Comparison")
+plt.ylabel("Patient Count")
+plt.xticks(rotation=45)
+plt.tight_layout()
 st.pyplot(fig4, use_container_width=True)
+plt.close(fig4)
 
 # ----------------------------------
 # ✅ POSITION
 # ----------------------------------
-rank = competitors["Patients"].rank(ascending=False)[0]
+rank = competitors["Patients"].rank(ascending=False).iloc[0]
 
 if rank == 1:
     st.success("✅ Market Leader")
@@ -269,8 +281,10 @@ def generate_pdf():
 
 if st.session_state.role == "Owner":
     st.subheader("📄 Export Report")
+    pdf_buffer = generate_pdf()
     st.download_button(
-        "Download PDF",
-        generate_pdf(),
-        "SRMC_Report.pdf"
+        label="Download PDF",
+        data=pdf_buffer,
+        file_name="SRMC_Report.pdf",
+        mime="application/pdf"
     )
