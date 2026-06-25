@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import datetime
@@ -7,14 +8,14 @@ import matplotlib.pyplot as plt
 from reportlab.pdfgen import canvas
 import folium
 from folium.plugins import HeatMap
-from streamlit.components.v1 import html
-from streamlit_autorefresh import st_autorefresh
 import os
 
 # ----------------------------------
 # ✅ AUTO REFRESH
 # ----------------------------------
-st_autorefresh(interval=10000, key="refresh")
+# Using Streamlit's built-in rerun with time-based polling
+if "refresh_count" not in st.session_state:
+    st.session_state.refresh_count = 0
 
 # ----------------------------------
 # ✅ PAGE CONFIG
@@ -189,7 +190,10 @@ heat = [[coords[r][0], coords[r][1], w] for r, w in zip(df["Region"], df["Patien
 
 m = folium.Map(location=[-37.6,145.1], zoom_start=12)
 HeatMap(heat).add_to(m)
-html(m._repr_html_(), height=400)
+
+# Display the map
+map_html = m._repr_html_()
+components.html(map_html, height=400)
 
 # ----------------------------------
 # ✅ AI INSIGHTS
