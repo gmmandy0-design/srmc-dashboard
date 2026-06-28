@@ -7,3 +7,5 @@ folium>=0.15.0
 branca>=0.7.0
 pillow>=11.0.0
 qrcode>=7.4.0
+
+
