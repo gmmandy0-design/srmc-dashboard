@@ -16,12 +16,12 @@ def init_db():
     conn = sqlite3.connect('srmc_bookings.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS bookings
-                 (id INTEGER PRIMARY KEY, 
-                  patient_name TEXT, 
-                  email TEXT, 
+                 (id INTEGER PRIMARY KEY,
+                  patient_name TEXT,
+                  email TEXT,
                   phone TEXT,
                   service TEXT,
-                  date TEXT, 
+                  date TEXT,
                   time TEXT,
                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
@@ -37,7 +37,7 @@ st.set_page_config(page_title="SRMC Dashboard", layout="wide")
 # ----------------------------------
 # ✅ HEADER
 # ----------------------------------
-col1, col2 = st.columns([1,4])
+col1, col2 = st.columns([1, 4])
 
 with col1:
     if os.path.exists("srmc_logo.png"):
@@ -93,18 +93,17 @@ st.sidebar.write(f"{st.session_state.user} ({st.session_state.role})")
 # ----------------------------------
 # ✅ TABS
 # ----------------------------------
-tab1, tab2, tab3, tab4 = st.tabs(["Dashboard","Book","Bookings","Workload"])
+tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Book", "Bookings", "Workload"])
 
 # ----------------------------------
 # ✅ TAB 1: DASHBOARD
 # ----------------------------------
 with tab1:
-
     st.success(f"System Active | {datetime.datetime.now().strftime('%H:%M:%S')}")
 
     df = pd.DataFrame({
-        "Type": np.random.choice(["Digital","Community","Allied","WorkCover"], 30),
-        "Patients": np.random.randint(10,50,30)
+        "Type": np.random.choice(["Digital", "Community", "Allied", "WorkCover"], 30),
+        "Patients": np.random.randint(10, 50, 30)
     })
 
     st.subheader("KPIs")
@@ -115,7 +114,7 @@ with tab1:
 
     st.bar_chart(df.groupby("Type")["Patients"].sum())
 
-    # Booking analytics
+    # Booking count
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM bookings")
     total_bookings = c.fetchone()[0]
@@ -126,7 +125,6 @@ with tab1:
 # ✅ TAB 2: BOOKING
 # ----------------------------------
 with tab2:
-
     booking_url = "https://www.hotdoc.com.au/medical-centres/mernda-VIC-3754/schotters-road-medical-centre/doctors"
 
     st.subheader("Quick Booking")
@@ -143,7 +141,7 @@ with tab2:
         email = st.text_input("Email")
         phone = st.text_input("Phone")
 
-        service = st.selectbox("Service", ["GP","Dietitian","Allied"])
+        service = st.selectbox("Service", ["GP", "Dietitian", "Allied"])
         date = st.date_input("Date")
         time = st.time_input("Time")
 
@@ -151,32 +149,30 @@ with tab2:
             if name:
                 conn.execute(
                     "INSERT INTO bookings (patient_name,email,phone,service,date,time) VALUES (?,?,?,?,?,?)",
-                    (name,email,phone,service,str(date),str(time))
+                    (name, email, phone, service, str(date), str(time))
                 )
                 conn.commit()
-                st.success("Booked")
+                st.success("✅ Booking saved")
 
 # ----------------------------------
-# ✅ TAB 3: ADMIN BOOKINGS
+# ✅ TAB 3: BOOKINGS
 # ----------------------------------
 with tab3:
-
     if st.session_state.role != "Staff":
-
         df = pd.read_sql("SELECT * FROM bookings", conn)
 
         if not df.empty:
             st.dataframe(df)
+        else:
+            st.info("No bookings yet")
 
 # ----------------------------------
 # ✅ TAB 4: WORKLOAD
 # ----------------------------------
 with tab4:
-
     df = pd.read_sql("SELECT service, COUNT(*) as count FROM bookings GROUP BY service", conn)
 
     if not df.empty:
-
         st.bar_chart(df.set_index("service"))
 
         total = df["count"].sum()
@@ -187,16 +183,18 @@ with tab4:
             st.warning("Medium workload")
         else:
             st.error("High workload")
+    else:
+        st.info("No workload data")
 
 # ----------------------------------
-# ✅ PDF
+# ✅ PDF EXPORT
 # ----------------------------------
 if st.session_state.role == "Owner":
 
     def pdf():
         buffer = io.BytesIO()
         c = canvas.Canvas(buffer)
-        c.drawString(50,700,"SRMC Report")
+        c.drawString(50, 700, "SRMC Report")
         c.save()
         buffer.seek(0)
         return buffer
