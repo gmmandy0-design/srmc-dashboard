@@ -120,13 +120,13 @@ conn = init_db()
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard", "📅 Book Appointment", "👥 Bookings", "📈 Workload"])
 
 # ----------------------------------
-# ✅ TAB 1: DASHBOARD
+#  TAB 1: DASHBOARD
 # ----------------------------------
 with tab1:
     st.success(f"🟢 System Active | {datetime.datetime.now().strftime('%H:%M:%S')}")
 
     # ----------------------------------
-    # ✅ DATA GENERATION
+    #  DATA GENERATION
     # ----------------------------------
     def generate_data():
         now = datetime.datetime.now()
@@ -144,7 +144,7 @@ with tab1:
     df = generate_data()
 
     # ----------------------------------
-    # ✅ CALCULATIONS
+    #  CALCULATIONS
     # ----------------------------------
     conversion = {
         'Family Digital Campaigns':0.08,
@@ -160,7 +160,7 @@ with tab1:
     monthly = df.groupby("Month")["Patients"].sum()
 
     # ----------------------------------
-    # ✅ KPI
+    #  KPI
     # ----------------------------------
     st.subheader("📊 Key Metrics")
 
@@ -170,13 +170,13 @@ with tab1:
     col3.metric("Top Channel", df["Type"].value_counts().idxmax())
 
     # ----------------------------------
-    # ✅ LIVE FEED
+    #  LIVE FEED
     # ----------------------------------
     st.subheader("🔴 Live HotDoc Feed")
     st.dataframe(df, use_container_width=True)
 
     # ----------------------------------
-    # ✅ GROWTH CHART
+    #  GROWTH CHART
     # ----------------------------------
     st.subheader("📈 Patient Growth")
 
@@ -189,7 +189,7 @@ with tab1:
     plt.close(fig1)
 
     # ----------------------------------
-    # ✅ COMPETITOR BENCHMARKING
+    #  COMPETITOR BENCHMARKING
     # ----------------------------------
     st.subheader("🏥 Market Benchmark")
 
@@ -212,40 +212,65 @@ with tab1:
     plt.close(fig3)
 
 # ----------------------------------
-# ✅ TAB 2: BOOKING FORM (PUBLIC)
+# # ----------------------------------
+#  TAB 2: BOOKING FORM (PUBLIC) 
 # ----------------------------------
 with tab2:
+
+    import qrcode
+
+    #  QR + HotDoc booking link
+    booking_url = "https://www.hotdoc.com.au/medical-centres/mernda-VIC-3754/schotters-road-medical-centre/doctors"
+
+    st.subheader("📲 Quick Booking")
+
+    qr = qrcode.make(booking_url)
+    st.image(qr, caption="Scan to book instantly")
+
+    st.link_button("✅ Book via HotDoc (Live System)", booking_url)
+
+    st.markdown("---")
+
+    # ✅ Booking Form
     st.subheader("📅 Book Your Appointment")
-    st.write("Please fill in your details to book an appointment with us.")
+    st.write("Or request an appointment below:")
 
     with st.form("booking_form"):
+
         patient_name = st.text_input("Full Name *")
         email = st.text_input("Email *")
         phone = st.text_input("Phone Number *")
-        
+
         service = st.selectbox("Service *", [
             "General Consultation",
             "Dietitian",
             "WorkCover / TAC",
             "Allied Health"
         ])
-        
+
         appointment_date = st.date_input("Preferred Date *")
         appointment_time = st.time_input("Preferred Time *")
-        
-        submitted = st.form_submit_button("🔒 Book Appointment")
-        
+
+        submitted = st.form_submit_button("🔒 Request Appointment")
+
         if submitted:
             if patient_name and email and phone:
+
                 c = conn.cursor()
-                c.execute('''INSERT INTO bookings (patient_name, email, phone, service, date, time)
-                           VALUES (?, ?, ?, ?, ?, ?)''',
-                         (patient_name, email, phone, service, str(appointment_date), str(appointment_time)))
+                c.execute('''
+                    INSERT INTO bookings (patient_name, email, phone, service, date, time)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''',
+                (patient_name, email, phone, service,
+                 str(appointment_date), str(appointment_time)))
+
                 conn.commit()
-                st.success("✅ Appointment booked successfully! We'll contact you shortly.")
+
+                st.success("✅ Appointment request submitted!")
                 st.balloons()
+
             else:
-                st.error("❌ Please fill in all required fields")
+                st.error("❌ Please complete all required fields")
 
 # ----------------------------------
 # ✅ TAB 3: BOOKINGS (ADMIN ONLY)
