@@ -175,13 +175,12 @@ with tab4:
         st.bar_chart(df.set_index("service"))
 
         total = df["count"].sum()
-
-        if total <= 4:
-            st.success("Low workload")
-        elif total <= 14:
-            st.warning("Medium workload")
-        else:
-            st.error("High workload")
+    if total in range(0, 5):
+        st.success("Low workload")
+    elif total in range(5, 15):
+        st.warning("Medium workload")
+    else:
+        st.error("High workload")
     else:
         st.info("No workload data")
 
